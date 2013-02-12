@@ -6,7 +6,11 @@ import getopt
 
 def usage():
     print """
-Fill stuff in here...
+Usage: python lifesong.py [OPTIONS]
+    -h, --help      Displays usage details.
+    -i, --indir     Input directory.
+    -o, --outdir    Output directory.
+    -r, --replace   Replace existing files (default=False)
     """
     return
 
@@ -16,7 +20,7 @@ def main(argv):
         sys.exit()
 
     try:
-        opts, args = getopt.getopt(argv, "i:o:r", ["indir=", "outdir=", \
+        opts, args = getopt.getopt(argv, "hi:o:r", ["help", "indir=", "outdir=", \
             "replace"])
     except getopt.GetoptError:
         usage()
@@ -27,7 +31,10 @@ def main(argv):
     replace = False
 
     for opt, arg in opts:
-        if opt in ("-i", "--indir"):
+        if opt in ("-h", "--help"):
+            usage()
+            sys.exit()
+        elif opt in ("-i", "--indir"):
             indir = arg.strip()
         elif opt in ("-o", "--outdir"):
             outdir = arg.strip()
@@ -45,23 +52,22 @@ def main(argv):
     wdDoNotSaveChanges = 0
     wdFormatPDF = 17
 
-    # in_file = os.path.abspath(sys.argv[1])
-    # out_file = os.path.abspath(sys.argv[2])
-
     if len(os.listdir(indir)) > 0:
         word = comtypes.client.CreateObject('Word.Application')
         for i in os.listdir(indir):
             if i.endswith(".doc") or i.endswith(".docx"):
-                print i
+                print i + " - ",
                 try:
                     doc = word.Documents.Open(indir + "/" + i)
-
-                    thesplit = os.path.splitext(i)
-                    print thesplit
-                    doc.SaveAs(outdir + "/" + thesplit[0] + '.pdf', FileFormat=wdFormatPDF)
+                    outfile = outdir + "/" + os.path.splitext(i)[0] + '.pdf'
+                    if os.path.exists(outfile) and not replace:
+                        print "File exists... skipping..."
+                        continue
+                    doc.SaveAs(outfile, FileFormat=wdFormatPDF)
                     doc.Close(wdDoNotSaveChanges)
+                    print "Done"
                 except comtypes.COMError:
-                    print "Whoops"
+                    print "Whoops, file seems to be corrupt."
         word.Quit()
 
 if __name__ == "__main__":
