@@ -65,11 +65,11 @@ def main(argv):
             replace = True
 
     if not os.path.isdir(indir):
-        print 'Invalid input directory "' + indir + '"'
+        print 'Invalid input directory "%s"' % indir
         sys.exit(2)
 
     if not os.path.isdir(outdir):
-        print 'Invalid output directory "' + output + '"'
+        print 'Invalid output directory "%s"' % outdir
         sys.exit(2)
 
     wdDoNotSaveChanges = 0
@@ -79,13 +79,13 @@ def main(argv):
         word = comtypes.client.CreateObject('Word.Application')
         for i in os.listdir(indir):
             if i.endswith(".doc") or i.endswith(".docx"):
-                print i + " - ",
+                print "%s - " % i,
                 try:
-                    doc = word.Documents.Open(indir + "/" + i)
-                    outfile = outdir + "/" + os.path.splitext(i)[0] + '.pdf'
+                    outfile = "%s/%s.pdf" % (outdir, os.path.splitext(i)[0])
                     if os.path.exists(outfile) and not replace:
                         print "File exists... skipping..."
                         continue
+                    doc = word.Documents.Open("%s/%s" % (indir, i))
                     doc.SaveAs(outfile, FileFormat=wdFormatPDF)
                     doc.Close(wdDoNotSaveChanges)
                     print "Done"
