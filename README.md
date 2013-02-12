@@ -7,7 +7,7 @@ Based on the accepted StackOverflow answer at
 http://stackoverflow.com/questions/6011115/doc-to-pdf-using-python
 
 ## Usage
-Basic usage: python lifesong.py -i "<indir>" -o "<outdir>" [--replace]
+Basic usage: ```python lifesong.py -i "[indir]" -o "[outdir]" [--replace]```
 
 ## License
 Copyright (C) 2013  Johan Meiring
