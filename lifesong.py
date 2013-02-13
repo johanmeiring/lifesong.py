@@ -27,6 +27,7 @@ import os
 import comtypes.client
 import getopt
 
+
 def usage():
     print """
 Usage: python lifesong.py [OPTIONS]
@@ -36,6 +37,7 @@ Usage: python lifesong.py [OPTIONS]
     -r, --replace   Replace existing files (default=False)
     """
     return
+
 
 def main(argv):
     if len(argv) == 0:
