@@ -29,6 +29,7 @@ import getopt
 import ftplib
 from ftplib import FTP
 
+
 def usage():
     print """
 Usage: python lifesong.py [OPTIONS]
@@ -43,6 +44,7 @@ Usage: python lifesong.py [OPTIONS]
     --passive       Use PASSIVE transfer mode for FTP.
     """
     return
+
 
 def main(argv):
     if len(argv) == 0:
