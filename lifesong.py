@@ -26,6 +26,8 @@ import sys
 import os
 import comtypes.client
 import getopt
+import ftplib
+from ftplib import FTP
 
 def usage():
     print """
@@ -33,7 +35,12 @@ Usage: python lifesong.py [OPTIONS]
     -h, --help      Displays usage details.
     -i, --indir     Input directory.
     -o, --outdir    Output directory.
-    -r, --replace   Replace existing files (default=False)
+    -r, --replace   Replace existing files (default=False).
+    -H, --host      FTP hostname/IP address.
+    -u, --username  FTP login username.
+    -p, --password  FTP login password.
+    -d, --directory Remote upload directory.
+    --passive       Use PASSIVE transfer mode for FTP.
     """
     return
 
@@ -43,8 +50,9 @@ def main(argv):
         sys.exit()
 
     try:
-        opts, args = getopt.getopt(argv, "hi:o:r", ["help", "indir=", "outdir=", \
-            "replace"])
+        opts, args = getopt.getopt(argv, "hi:o:rH:u:p:d:", ["help", "indir=", \
+            "outdir=", "replace", "host=", "username=", "password=", \
+            "directory=", "passive"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -52,6 +60,11 @@ def main(argv):
     indir = ''
     outdir = ''
     replace = False
+    ftp_passive = False
+    ftp_host = ''
+    ftp_username = ''
+    ftp_password = ''
+    ftp_directory = ''
 
     for opt, arg in opts:
         if opt in ("-h", "--help"):
@@ -63,6 +76,16 @@ def main(argv):
             outdir = arg.strip()
         elif opt in ("-r", "--replace"):
             replace = True
+        elif opt in ("-H", "--host"):
+            ftp_host = arg.strip()
+        elif opt in ("-u", "--username"):
+            ftp_username = arg.strip()
+        elif opt in ("-p", "--password"):
+            ftp_password = arg.strip()
+        elif opt in ("-d", "--directory"):
+            ftp_directory = arg.strip()
+        elif opt in ("--passive"):
+            ftp_passive = True
 
     if not os.path.isdir(indir):
         print 'Invalid input directory "%s"' % indir
@@ -77,6 +100,18 @@ def main(argv):
 
     if len(os.listdir(indir)) > 0:
         word = comtypes.client.CreateObject('Word.Application')
+
+        ftp_client = None
+        if ftp_host != '':
+            try:
+                ftp_client = FTP(ftp_host, ftp_username, ftp_password)
+                ftp_client.set_pasv(ftp_passive)
+                ftp_client.cwd(ftp_directory)
+            except ftplib.all_errors as strerror:
+                print "Something horrible has gone wrong..."
+                print strerror
+                ftp_client = None
+
         for i in os.listdir(indir):
             if i.endswith(".doc") or i.endswith(".docx"):
                 print "%s - " % i,
@@ -88,10 +123,18 @@ def main(argv):
                     doc = word.Documents.Open("%s/%s" % (indir, i))
                     doc.SaveAs(outfile, FileFormat=wdFormatPDF)
                     doc.Close(wdDoNotSaveChanges)
+
+                    if ftp_client:
+                        ftp_client.storbinary("STOR " + \
+                            os.path.basename(outfile), \
+                            open(outfile, "rb", 8192))
+
                     print "Done"
                 except comtypes.COMError:
                     print "Whoops, file seems to be corrupt."
         word.Quit()
+        if ftp_client:
+            ftp_client.quit()
 
 if __name__ == "__main__":
     main(sys.argv[1:])
