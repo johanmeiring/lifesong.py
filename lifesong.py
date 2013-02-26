@@ -24,6 +24,7 @@
 
 import sys
 import os
+import time
 import comtypes.client
 import getopt
 import ftplib
@@ -114,12 +115,19 @@ def main(argv):
                 print strerror
                 ftp_client = None
 
+        last_time = 0
+        if os.path.exists("last_time.dat"):
+            f = open("last_time.dat", "r")
+            last_time = float(f.read())
+            f.close()
+
         for i in os.listdir(indir):
             if i.endswith(".doc") or i.endswith(".docx"):
                 print "%s - " % i,
                 try:
                     outfile = "%s/%s.pdf" % (outdir, os.path.splitext(i)[0])
-                    if os.path.exists(outfile) and not replace:
+                    if os.path.exists(outfile) and not replace and \
+                        os.path.getmtime("%s/%s" % (indir, i)) < last_time:
                         print "File exists... skipping..."
                         continue
                     doc = word.Documents.Open("%s/%s" % (indir, i))
@@ -134,6 +142,12 @@ def main(argv):
                     print "Done"
                 except comtypes.COMError:
                     print "Whoops, file seems to be corrupt."
+
+        last_time = time.time()
+        f = open("last_time.dat", "w")
+        f.write(str(last_time))
+        f.close()
+
         word.Quit()
         if ftp_client:
             ftp_client.quit()
